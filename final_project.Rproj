@@ -14,3 +14,136 @@ LaTeX: pdfLaTeX
 
 AutoAppendNewline: Yes
 StripTrailingWhitespace: Yes
+
+
+##############################################
+##############################################
+
+library(here)
+library(readxl)
+library(dplyr)
+library(gtsummary)
+library(broom)
+library(ggcorrplot)
+library(corrr)
+library(ggplot2)
+
+#----------------------------------------------------
+# 1. Load data (Objective: read in dataset)
+#----------------------------------------------------
+PPI_dataset <- read_excel(here("data", "PPI_dataset.xlsx"))
+
+#----------------------------------------------------
+# 2. Custom function (Objective: create a function)
+#----------------------------------------------------
+# Function: return mean + sd for a variable
+mean_sd <- function(x) {
+  c(mean = mean(x, na.rm = TRUE),
+    sd = sd(x, na.rm = TRUE))
+}
+
+# EXAMPLE USE
+mean_sd(PPI_dataset$Flourish_PreTotal)
+
+#----------------------------------------------------
+# 3. Descriptive statistics (gtsummary table)
+#----------------------------------------------------
+desc_table <- 
+  PPI_dataset %>%
+  select(Flourish_PreTotal, CESD_PreTotal, AHS_PreTotal,
+         BMPN_Sat_Aut_Pre, BMPN_Sat_Rel_Pre, BMPN_Sat_Com_Pre,
+         PANAS_Pos_Pre, AGE, Income, Sex) %>%
+  tbl_summary()
+
+# Save table as HTML (counts as saving a file)
+gt::gtsave(desc_table, here("output", "desc_table.html"))
+
+#----------------------------------------------------
+# 4. Correlation analysis
+#----------------------------------------------------
+cor_data <- PPI_dataset %>% 
+  select(Flourish_PreTotal, CESD_PreTotal, AHS_PreTotal,
+         BMPN_Sat_Aut_Pre, BMPN_Sat_Rel_Pre, BMPN_Sat_Com_Pre,
+         PANAS_Pos_Pre)
+
+cor_matrix <- cor(cor_data, use = "complete.obs")
+
+# Save correlation heatmap
+png(here("output", "corrplot.png"))
+ggcorrplot(cor_matrix, lab = TRUE, type = "lower",
+           title = "Correlation Matrix of Psychological Constructs")
+dev.off()
+
+#----------------------------------------------------
+# 5. Regression (Objective: regression with gtsummary)
+#----------------------------------------------------
+PPI_dataset$Income <- as.factor(PPI_dataset$Income)
+PPI_dataset$Sex <- as.factor(PPI_dataset$Sex)
+
+model <- lm(Flourish_PreTotal ~ AHS_PreTotal + BMPN_Sat_Aut_Pre +
+              BMPN_Sat_Rel_Pre + BMPN_Sat_Com_Pre + PANAS_Pos_Pre +
+              AGE + Sex + Income,
+            data = PPI_dataset)
+
+model_table <- tbl_regression(model)
+
+# Save regression table
+gt::gtsave(model_table, here("output", "reg_table.html"))
+
+#----------------------------------------------------
+# 6. Save cleaned dataset
+#----------------------------------------------------
+clean_data <- PPI_dataset[-c(7, 58, 82), ]
+write.csv(clean_data, here("output", "PPI_clean.csv"), row.names = FALSE)
+
+
+
+# Statistical Analysis Plan (SAP)
+
+## Research Aim
+This study examines how positive psychology constructs – depression, hope, psychological needs satisfaction (autonomy, relatedness, competence), and positive affect – relate to flourishing among Chinese university students prior to intervention.
+
+---
+
+## Aim 1: Descriptive Statistics
+We will summarize all psychological and demographic variables using:
+
+- Mean, standard deviation, median
+- Minimum and maximum
+- Distribution plots (figure optional)
+- Tool: `gtsummary::tbl_summary()`
+
+Purpose: Understand baseline mental health and well-being levels in this population.
+
+---
+
+## Aim 2: Correlation Analysis
+We will estimate pairwise Pearson correlations between:
+
+- Flourishing (outcome)
+- Depression  
+- Hope  
+- Positive affect (PANAS)  
+- Psychological needs: autonomy, relatedness, competence  
+
+Steps:
+1. Compute correlation matrix using `cor()` and tidy with `corrr::correlate()`.
+2. Visualize correlations via heatmap using `ggcorrplot()`.
+
+This will identify which constructs are most strongly associated with flourishing.
+
+---
+
+## Aim 3: Regression Analysis
+A multiple linear regression will model flourishing as a function of:
+
+- Hope  
+- Autonomy satisfaction  
+- Relatedness satisfaction  
+- Competence satisfaction  
+- Positive affect  
+- Covariates: Age, Sex, Income
+
+Model:Flourish_PreTotal ~ AHS_PreTotal + BMPN_Sat_Aut_Pre + BMPN_Sat_Rel_Pre + BMPN_Sat_Com_Pre + PANAS_Pos_Pre + AGE + Sex + Income
+
+
