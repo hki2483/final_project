@@ -42,7 +42,6 @@ mean_sd <- function(x) {
     sd = sd(x, na.rm = TRUE))
 }
 
-# EXAMPLE USE
 mean_sd(PPI_dataset$Flourish_PreTotal)
 
 #----------------------------------------------------
@@ -54,9 +53,6 @@ desc_table <-
          BMPN_Sat_Aut_Pre, BMPN_Sat_Rel_Pre, BMPN_Sat_Com_Pre,
          PANAS_Pos_Pre, AGE, Income, Sex) %>%
   tbl_summary()
-
-# Save table as HTML (counts as saving a file)
-gt::gtsave(desc_table, here("output", "desc_table.html"))
 
 #----------------------------------------------------
 # 4. Correlation analysis
@@ -87,14 +83,29 @@ model <- lm(Flourish_PreTotal ~ AHS_PreTotal + BMPN_Sat_Aut_Pre +
 
 model_table <- tbl_regression(model)
 
-# Save regression table
-gt::gtsave(model_table, here("output", "reg_table.html"))
-
 #----------------------------------------------------
 # 6. Save cleaned dataset
 #----------------------------------------------------
 clean_data <- PPI_dataset[-c(7, 58, 82), ]
 write.csv(clean_data, here("output", "PPI_clean.csv"), row.names = FALSE)
+
+
+
+# Final Project – Flourishing Analysis
+
+## How to run the analysis
+
+1. Place your dataset in the `final_project/` folder  
+   - Example: `final_project/PPI_dataset.xlsx`
+
+2. Run the analysis script:
+source("analysis.R")
+
+3. Outputs will be saved into the `output/` directory:
+   - `desc_table.html` (gtsummary descriptive table)
+   - `reg_table.html` (regression results)
+   - `corrplot.png` (correlation heatmap)
+   - `PPI_clean.csv` (clean dataset without outliers)
 
 
 
