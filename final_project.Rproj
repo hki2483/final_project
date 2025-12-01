@@ -31,7 +31,7 @@ library(ggplot2)
 #----------------------------------------------------
 # 1. Load data (Objective: read in dataset)
 #----------------------------------------------------
-PPI_dataset <- read_excel(here("data", "PPI_dataset.xlsx"))
+PPI_dataset <- read_excel(here("final_project", "PPI_dataset.xlsx"))
 
 #----------------------------------------------------
 # 2. Custom function (Objective: create a function)
