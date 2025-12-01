@@ -1,0 +1,162 @@
+---
+title: "final-project-HK"
+format: html
+---
+
+title: "Flourishing and Psychological Constructs among Chinese University Students"
+author: "Hyein Kim"
+format:
+  html:
+    toc: true
+execute:
+  echo: true
+
+```
+
+```{r}
+#| label: setup
+
+library(here)
+library(readxl)
+library(dplyr)
+library(gtsummary)
+library(ggcorrplot)
+library(ggplot2)
+library(corrr)
+library(broom)
+
+# Load dataset from final_project folder
+PPI_dataset <- read_excel(here("data", "PPI_dataset.xlsx"))
+
+
+
+```
+
+
+
+
+
+1. Data Description
+
+This dataset originates from a two-arm randomized controlled trial (RCT) conducted among
+Chinese university students in Hong Kong (N = 100).
+The trial evaluated a 6-day online self-help Positive Psychological Intervention (PPI) aimed at enhancing flourishing and reducing depressive symptoms.
+
+For this analysis, only pre-intervention baseline data are used.
+
+Key variables include:
+
+Outcome: Flourishing (Flourish_PreTotal)
+
+Predictors: Depression (CESD_PreTotal), Hope (AHS_PreTotal),
+Autonomy/Relatedness/Competence (BMPN), Positive Affect (PANAS_Pos_Pre)
+
+# 1. Data Description
+
+The dataset used in this analysis originates from a two-arm randomized controlled trial (RCT) conducted among undergraduate students at a university in Hong Kong. The trial aimed to evaluate the effectiveness of a **6-day online self-help Positive Psychological Intervention (PPI)** designed to promote well-being, strengthen positive psychological constructs, and reduce depressive symptoms.
+
+A total of **100 Chinese university students** participated in the study. Students were randomly assigned to either the intervention condition or a waitlist control group. For the purpose of this project, **only pre-intervention (baseline) data** were used so that the analysis reflects natural associations between mental health constructs without any intervention effects.
+
+### **Variables included in this analysis**
+
+- **Outcome**
+  - *Flourish_PreTotal:* Total score from the Flourishing Scale, representing overall psychological well-being.
+
+- **Predictors**
+  - *CESD_PreTotal:* Depressive symptoms measured using the CES-D.
+  - *AHS_PreTotal:* Hope, evaluated with the Adult Hope Scale.
+  - *BMPN_Sat_Aut_Pre:* Autonomy satisfaction (Basic Psychological Needs).
+  - *BMPN_Sat_Rel_Pre:* Relatedness satisfaction.
+  - *BMPN_Sat_Com_Pre:* Competence satisfaction.
+  - *PANAS_Pos_Pre:* Positive affect measured by the PANAS.
+
+- **Covariates**
+  - *AGE:* Age in years.
+  - *Sex:* Gender (coded as categorical variable).
+  - *Income:* Monthly family income category.
+
+### **Source**
+
+This dataset was obtained from a positive psychology intervention study conducted in Hong Kong (Auyeung et al., 2019). The study examined the effects of a brief online well-being intervention grounded in positive psychology principles.  
+Only baseline self-report questionnaire data were used for the present analysis.
+
+
+
+
+```{r}
+#| label: tbl-desc
+
+desc_table <-
+PPI_dataset %>%
+select(Flourish_PreTotal, CESD_PreTotal, AHS_PreTotal,
+BMPN_Sat_Aut_Pre, BMPN_Sat_Rel_Pre, BMPN_Sat_Com_Pre,
+PANAS_Pos_Pre, AGE, Income, Sex) %>%
+tbl_summary()
+
+desc_table
+
+```
+
+
+##Inline...##
+'The mean flourishing score is
+r gtsummary::inline_text(desc_table, variable = "Flourish_PreTotal", statistic = "mean").'
+
+'The mean age of participants is
+r mean(PPI_dataset$AGE, na.rm = TRUE).'
+
+```{r}
+#| label: fig-corr
+#| fig-cap: "Correlation Among Psychological Constructs"
+
+cor_data <- PPI_dataset %>%
+select(Flourish_PreTotal, CESD_PreTotal, AHS_PreTotal,
+BMPN_Sat_Aut_Pre, BMPN_Sat_Rel_Pre, BMPN_Sat_Com_Pre,
+PANAS_Pos_Pre)
+
+
+cor_matrix <- cor(cor_data, use = "complete.obs")
+
+ggcorrplot(cor_matrix,
+lab = TRUE,
+type = "lower",
+title = "Correlation Matrix of Psychological Constructs")
+
+```
+
+
+```{r}
+PPI_dataset$Income <- as.factor(PPI_dataset$Income)
+PPI_dataset$Sex <- as.factor(PPI_dataset$Sex)
+
+```
+
+
+```{r}
+#| label: tbl-reg
+
+model <- lm(Flourish_PreTotal ~ AHS_PreTotal + BMPN_Sat_Aut_Pre +
+BMPN_Sat_Rel_Pre + BMPN_Sat_Com_Pre + PANAS_Pos_Pre +
+AGE + Sex + Income,
+data = PPI_dataset)
+
+model_table <- tbl_regression(model)
+model_table
+
+```
+
+```{r}
+gt::gtsave(as_gt(desc_table), here("output", "desc_table.html"))
+gt::gtsave(as_gt(model_table), here("output", "reg_table.html"))
+
+
+
+```
+
+See Table @tbl-desc for descriptive statistics.
+See Table @tbl-reg for regression results.
+See Figure @fig-corr for correlation visualization.
+
+
+
+
